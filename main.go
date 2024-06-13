@@ -26,7 +26,7 @@ const (
 	// B2 exponential decay rate for the second-moment estimates
 	B2 = 0.89
 	// Eta is the learning rate
-	Eta = .01
+	Eta = .5
 	// S is the scaling factor for the softmax
 	S = 1.0 - 1e-300
 )
@@ -142,7 +142,7 @@ func main() {
 		}
 	}
 	size := x * y * 10
-	length := len(sets[0].Train)
+	length := len(sets[0].Train) + 1
 
 	set := tf64.NewSet()
 	set.Add("q", size, size)
@@ -190,6 +190,94 @@ func main() {
 		}
 		e++
 	}
+	cutoff := (e + 1) * size
+	for _, example := range sets[0].Test[:1] {
+		for i, v := range example.Input {
+			for j, vv := range v {
+				input.X[e*size+(i*len(v)+j)*10+int(vv)] = 1
+				total++
+			}
+		}
+		e++
+		for i, v := range example.Output {
+			for j := range v {
+				input.X[e*size+(i*len(v)+j)*10+int(rng.Intn(10))] = 1
+				total++
+			}
+		}
+		e++
+	}
+
+	prnt := func() {
+		e := 0
+		for _, example := range sets[0].Train {
+			for i, v := range example.Input {
+				for j := range v {
+					kk, max := 0, 0.0
+					for k := 0; k < 10; k++ {
+						value := input.X[e*size+(i*len(v)+j)*10+k]
+						if value > max {
+							kk, max = k, value
+						}
+					}
+					fmt.Printf("%.2d ", kk)
+				}
+				fmt.Println()
+			}
+			fmt.Println()
+			e++
+			for i, v := range example.Output {
+				for j := range v {
+					kk, max := 0, 0.0
+					for k := 0; k < 10; k++ {
+						value := input.X[e*size+(i*len(v)+j)*10+k]
+						if value > max {
+							kk, max = k, value
+						}
+					}
+					fmt.Printf("%.2d ", kk)
+				}
+				fmt.Println()
+			}
+			fmt.Println()
+			e++
+		}
+		for _, example := range sets[0].Test[:1] {
+			for i, v := range example.Input {
+				for j := range v {
+					kk, max := 0, 0.0
+					for k := 0; k < 10; k++ {
+						value := input.X[e*size+(i*len(v)+j)*10+k]
+						if value > max {
+							kk, max = k, value
+						}
+					}
+					fmt.Printf("%.2d ", kk)
+				}
+				fmt.Println()
+			}
+			fmt.Println()
+			e++
+			for i, v := range example.Output {
+				for j := range v {
+					kk, max := 0, 0.0
+					for k := 0; k < 10; k++ {
+						value := input.X[e*size+(i*len(v)+j)*10+k]
+						if value > max {
+							kk, max = k, value
+						}
+					}
+					fmt.Printf("%.2d ", kk)
+				}
+				fmt.Println()
+			}
+			fmt.Println()
+			e++
+		}
+	}
+	prnt()
+	fmt.Println("---------------------------------------")
+
 	total = math.Sqrt(2.0 / total)
 	for i, value := range input.X {
 		input.X[i] = value * total
@@ -203,7 +291,7 @@ func main() {
 	output := tf64.Entropy(softmax(attention))
 	loss := tf64.Sum(output)
 	points := make(plotter.XYs, 0, 8)
-	for epoch := 0; epoch < 1024; epoch++ {
+	for epoch := 0; epoch < 128; epoch++ {
 		pow := func(x float64) float64 {
 			y := math.Pow(x, float64(epoch+1))
 			if math.IsNaN(y) || math.IsInf(y, 0) {
@@ -218,7 +306,11 @@ func main() {
 		points = append(points, plotter.XY{X: float64(epoch), Y: float64(cost)})
 		norm := 0.0
 		for _, p := range set.Weights {
-			for _, d := range p.D {
+			der := p.D
+			if p.N == "input" {
+				der = p.D[cutoff:]
+			}
+			for _, d := range der {
 				norm += d * d
 			}
 		}
@@ -229,7 +321,14 @@ func main() {
 			scaling = 1 / norm
 		}
 		for _, w := range set.Weights {
-			for l, d := range w.D {
+			der := w.D
+			if w.N == "input" {
+				der = w.D[cutoff:]
+			}
+			for l, d := range der {
+				if w.N == "input" {
+					l += cutoff
+				}
 				g := d * scaling
 				m := B1*w.States[StateM][l] + (1-B1)*g
 				v := B2*w.States[StateV][l] + (1-B2)*g*g
@@ -300,4 +399,5 @@ func main() {
 		}
 	}
 	fmt.Println("v", min, max)
+	prnt()
 }

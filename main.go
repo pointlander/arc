@@ -26,7 +26,7 @@ const (
 	// B2 exponential decay rate for the second-moment estimates
 	B2 = 0.89
 	// Eta is the learning rate
-	Eta = .5
+	Eta = .01
 	// S is the scaling factor for the softmax
 	S = 1.0 - 1e-300
 )
@@ -39,6 +39,53 @@ const (
 	// StateTotal is the total number of states
 	StateTotal
 )
+
+// Softmax is the softmax function for big numbers
+func Softmax(k tf64.Continuation, node int, a *tf64.V, options ...map[string]interface{}) bool {
+	c, size, width := tf64.NewV(a.S...), len(a.X), a.S[0]
+	S := S
+	if len(options) > 0 {
+		s, ok := options[0]["S"]
+		if ok {
+			S = s.(float64)
+		}
+	}
+	max, min := float64(-math.MaxFloat64), math.MaxFloat64
+	for _, v := range a.X {
+		if v > max {
+			max = v
+		}
+		if v < min {
+			min = v
+		}
+	}
+	values := make([]float64, width)
+	for i := 0; i < size; i += width {
+		s := float64(max) * S
+		sum := 0.0
+		for j, ax := range a.X[i : i+width] {
+			values[j] = math.Exp((float64(ax) - s) / (max - min))
+			sum += values[j]
+		}
+		for _, cx := range values {
+			c.X = append(c.X, float64(cx/sum))
+		}
+	}
+	if k(&c) {
+		return true
+	}
+	for i, d := range c.D {
+		cx := c.X[i]
+		for j := range c.X {
+			if j == i {
+				a.D[j] += d * cx * (1 - cx)
+			} else {
+				a.D[j] -= d * cx * c.X[j]
+			}
+		}
+	}
+	return false
+}
 
 // Example is a learning example
 type Example struct {
@@ -96,25 +143,17 @@ func main() {
 	}
 	size := x * y * 10
 	length := len(sets[0].Train)
-	input := tf64.NewV(size, length)
-	input.X = input.X[:cap(input.X)]
-	for e, example := range sets[0].Train {
-		for i, v := range example.Input {
-			for j, vv := range v {
-				input.X[e*length+i*len(v)+j] = float64(vv) / 10.0
-			}
-		}
-	}
 
 	set := tf64.NewSet()
 	set.Add("q", size, size)
 	set.Add("k", size, size)
 	set.Add("v", size, size)
+	set.Add("input", size, 2*length)
 
 	for i := range set.Weights {
 		w := set.Weights[i]
 		size := w.S[0] * w.S[1]
-		if strings.HasPrefix(w.N, "b") {
+		if strings.HasPrefix(w.N, "input") || strings.HasPrefix(w.N, "b") {
 			w.X = w.X[:size]
 			w.States = make([][]float64, StateTotal)
 			for i := range w.States {
@@ -132,14 +171,39 @@ func main() {
 		}
 	}
 
+	input := set.ByName["input"]
+	e := 0
+	total := 0.0
+	for _, example := range sets[0].Train {
+		for i, v := range example.Input {
+			for j, vv := range v {
+				input.X[e*size+(i*len(v)+j)*10+int(vv)] = 1
+				total++
+			}
+		}
+		e++
+		for i, v := range example.Output {
+			for j, vv := range v {
+				input.X[e*size+(i*len(v)+j)*10+int(vv)] = 1
+				total++
+			}
+		}
+		e++
+	}
+	total = math.Sqrt(2.0 / total)
+	for i, value := range input.X {
+		input.X[i] = value * total
+	}
+
+	softmax := tf64.U(Softmax)
 	q := tf64.Mul(set.Get("q"), input.Meta())
 	k := tf64.Mul(set.Get("k"), input.Meta())
 	v := tf64.Mul(set.Get("v"), input.Meta())
-	attention := tf64.T(tf64.Mul(tf64.Softmax(tf64.Mul(q, k)), tf64.T(v)))
-	output := tf64.Entropy(tf64.Softmax(attention))
+	attention := tf64.T(tf64.Mul(softmax(tf64.Mul(q, k)), tf64.T(v)))
+	output := tf64.Entropy(softmax(attention))
 	loss := tf64.Sum(output)
 	points := make(plotter.XYs, 0, 8)
-	for epoch := 0; epoch < 256; epoch++ {
+	for epoch := 0; epoch < 1024; epoch++ {
 		pow := func(x float64) float64 {
 			y := math.Pow(x, float64(epoch+1))
 			if math.IsNaN(y) || math.IsInf(y, 0) {

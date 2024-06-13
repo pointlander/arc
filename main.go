@@ -205,4 +205,35 @@ func main() {
 		fmt.Println(a.S)
 		return true
 	})
+
+	min, max := math.MaxFloat64, -math.MaxFloat64
+	for _, v := range set.ByName["q"].X {
+		if v > max {
+			max = v
+		}
+		if v < min {
+			min = v
+		}
+	}
+	fmt.Println("q", min, max)
+	min, max = math.MaxFloat64, -math.MaxFloat64
+	for _, v := range set.ByName["k"].X {
+		if v > max {
+			max = v
+		}
+		if v < min {
+			min = v
+		}
+	}
+	fmt.Println("k", min, max)
+	min, max = math.MaxFloat64, -math.MaxFloat64
+	for _, v := range set.ByName["v"].X {
+		if v > max {
+			max = v
+		}
+		if v < min {
+			min = v
+		}
+	}
+	fmt.Println("v", min, max)
 }

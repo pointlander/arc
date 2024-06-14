@@ -26,7 +26,7 @@ const (
 	// B2 exponential decay rate for the second-moment estimates
 	B2 = 0.89
 	// Eta is the learning rate
-	Eta = .5
+	Eta = .7
 	// S is the scaling factor for the softmax
 	S = 1.0 - 1e-300
 )
@@ -126,29 +126,32 @@ func main() {
 	fmt.Println("test", test)
 	fmt.Println("train", train)
 
-	x, y := 0, 0
+	ix, iy := 0, 0
+	ox, oy := 0, 0
 	for _, value := range sets[0].Train {
-		if len(value.Input) > y {
-			y = len(value.Input)
+		if len(value.Input) > iy {
+			iy = len(value.Input)
 		}
-		if len(value.Input[0]) > x {
-			x = len(value.Input[0])
+		if len(value.Input[0]) > ix {
+			ix = len(value.Input[0])
 		}
-		if len(value.Output) > y {
-			y = len(value.Output)
+		if len(value.Output) > oy {
+			oy = len(value.Output)
 		}
-		if len(value.Output[0]) > x {
-			x = len(value.Output[0])
+		if len(value.Output[0]) > ox {
+			ox = len(value.Output[0])
 		}
 	}
-	size := x * y * 10
+	isize := ix * iy * 10
+	osize := ox * oy * 10
+	size := isize + osize
 	length := len(sets[0].Train) + 1
 
 	set := tf64.NewSet()
 	set.Add("q", size, size)
 	set.Add("k", size, size)
 	set.Add("v", size, size)
-	set.Add("input", size, 2*length)
+	set.Add("input", size, length)
 
 	for i := range set.Weights {
 		w := set.Weights[i]
@@ -181,16 +184,15 @@ func main() {
 				total++
 			}
 		}
-		e++
 		for i, v := range example.Output {
 			for j, vv := range v {
-				input.X[e*size+(i*len(v)+j)*10+int(vv)] = 1
+				input.X[e*size+isize+(i*len(v)+j)*10+int(vv)] = 1
 				total++
 			}
 		}
 		e++
 	}
-	cutoff := (e + 1) * size
+	cutoff := e*size + isize
 	for _, example := range sets[0].Test[:1] {
 		for i, v := range example.Input {
 			for j, vv := range v {
@@ -198,10 +200,9 @@ func main() {
 				total++
 			}
 		}
-		e++
 		for i, v := range example.Output {
 			for j := range v {
-				input.X[e*size+(i*len(v)+j)*10+int(rng.Intn(10))] = 1
+				input.X[e*size+isize+(i*len(v)+j)*10+int(rng.Intn(10))] = 1
 				total++
 			}
 		}
@@ -225,12 +226,11 @@ func main() {
 				fmt.Println()
 			}
 			fmt.Println()
-			e++
 			for i, v := range example.Output {
 				for j := range v {
 					kk, max := 0, 0.0
 					for k := 0; k < 10; k++ {
-						value := input.X[e*size+(i*len(v)+j)*10+k]
+						value := input.X[e*size+isize+(i*len(v)+j)*10+k]
 						if value > max {
 							kk, max = k, value
 						}
@@ -257,12 +257,11 @@ func main() {
 				fmt.Println()
 			}
 			fmt.Println()
-			e++
 			for i, v := range example.Output {
 				for j := range v {
 					kk, max := 0, 0.0
 					for k := 0; k < 10; k++ {
-						value := input.X[e*size+(i*len(v)+j)*10+k]
+						value := input.X[e*size+isize+(i*len(v)+j)*10+k]
 						if value > max {
 							kk, max = k, value
 						}
@@ -293,7 +292,7 @@ func main() {
 	points := make(plotter.XYs, 0, 8)
 	for epoch := 0; epoch < 128; epoch++ {
 		pow := func(x float64) float64 {
-			y := math.Pow(x, float64(epoch+1))
+			y := math.Pow(x, float64(epoch/256+1))
 			if math.IsNaN(y) || math.IsInf(y, 0) {
 				return 0
 			}

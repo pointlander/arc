@@ -151,6 +151,8 @@ func main() {
 	set.Add("q", size, size)
 	set.Add("k", size, size)
 	set.Add("v", size, size)
+	set.Add("w", size, size/2)
+	set.Add("b", size/2)
 	set.Add("input", size, length)
 
 	for i := range set.Weights {
@@ -283,9 +285,10 @@ func main() {
 	}
 
 	softmax := tf64.U(Softmax)
-	q := tf64.Mul(set.Get("q"), input.Meta())
-	k := tf64.Mul(set.Get("k"), input.Meta())
-	v := tf64.Mul(set.Get("v"), input.Meta())
+	in := tf64.Everett(tf64.Add(tf64.Mul(set.Get("w"), input.Meta()), set.Get("b")))
+	q := tf64.Mul(set.Get("q"), in)
+	k := tf64.Mul(set.Get("k"), in)
+	v := tf64.Mul(set.Get("v"), in)
 	attention := tf64.T(tf64.Mul(softmax(tf64.Mul(q, k)), tf64.T(v)))
 	output := tf64.Entropy(softmax(attention))
 	loss := tf64.Sum(output)

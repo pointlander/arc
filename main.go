@@ -223,7 +223,7 @@ func main() {
 							kk, max = k, value
 						}
 					}
-					fmt.Printf("%.2d ", kk)
+					fmt.Printf("%.1d ", kk)
 				}
 				fmt.Println()
 			}
@@ -237,7 +237,7 @@ func main() {
 							kk, max = k, value
 						}
 					}
-					fmt.Printf("%.2d ", kk)
+					fmt.Printf("%.1d ", kk)
 				}
 				fmt.Println()
 			}
@@ -254,7 +254,7 @@ func main() {
 							kk, max = k, value
 						}
 					}
-					fmt.Printf("%.2d ", kk)
+					fmt.Printf("%.1d ", kk)
 				}
 				fmt.Println()
 			}
@@ -268,7 +268,7 @@ func main() {
 							kk, max = k, value
 						}
 					}
-					fmt.Printf("%.2d ", kk)
+					fmt.Printf("%.1d ", kk)
 				}
 				fmt.Println()
 			}

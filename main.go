@@ -291,9 +291,12 @@ func main() {
 	v := tf64.Mul(set.Get("v"), in)
 	attention := tf64.T(tf64.Mul(softmax(tf64.Mul(q, k)), tf64.T(v)))
 	output := tf64.Entropy(softmax(attention))
-	loss := tf64.Sum(output)
+	//loss := tf64.Sum(output)
+	begin := 5
+	end := 6
+	loss := tf64.Sum(tf64.Slice(output, map[string]interface{}{"begin": &begin, "end": &end}))
 	points := make(plotter.XYs, 0, 8)
-	for epoch := 0; epoch < 128; epoch++ {
+	for epoch := 0; epoch < 1024; epoch++ {
 		pow := func(x float64) float64 {
 			y := math.Pow(x, float64(epoch/256+1))
 			if math.IsNaN(y) || math.IsInf(y, 0) {

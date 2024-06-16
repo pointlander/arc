@@ -125,10 +125,11 @@ func main() {
 	}
 	fmt.Println("test", test)
 	fmt.Println("train", train)
+	s := 0
 
 	ix, iy := 0, 0
 	ox, oy := 0, 0
-	for _, value := range sets[0].Train {
+	for _, value := range sets[s].Train {
 		if len(value.Input) > iy {
 			iy = len(value.Input)
 		}
@@ -145,7 +146,7 @@ func main() {
 	isize := ix * iy * 10
 	osize := ox * oy * 10
 	size := isize + osize
-	length := len(sets[0].Train) + 1
+	length := len(sets[s].Train) + 1
 
 	set := tf64.NewSet()
 	set.Add("q", size, size)
@@ -179,7 +180,7 @@ func main() {
 	input := set.ByName["input"]
 	e := 0
 	total := 0.0
-	for _, example := range sets[0].Train {
+	for _, example := range sets[s].Train {
 		for i, v := range example.Input {
 			for j, vv := range v {
 				input.X[e*size+(i*len(v)+j)*10+int(vv)] = 1
@@ -195,7 +196,7 @@ func main() {
 		e++
 	}
 	cutoff := e*size + isize
-	for _, example := range sets[0].Test[:1] {
+	for _, example := range sets[s].Test[:1] {
 		for i, v := range example.Input {
 			for j, vv := range v {
 				input.X[e*size+(i*len(v)+j)*10+int(vv)] = 1
@@ -213,7 +214,7 @@ func main() {
 
 	prnt := func() {
 		e := 0
-		for _, example := range sets[0].Train {
+		for _, example := range sets[s].Train {
 			for i, v := range example.Input {
 				for j := range v {
 					kk, max := 0, 0.0
@@ -244,7 +245,7 @@ func main() {
 			fmt.Println()
 			e++
 		}
-		for _, example := range sets[0].Test[:1] {
+		for _, example := range sets[s].Test[:1] {
 			for i, v := range example.Input {
 				for j := range v {
 					kk, max := 0, 0.0
@@ -259,8 +260,9 @@ func main() {
 				fmt.Println()
 			}
 			fmt.Println()
+			total, correct := 0, 0
 			for i, v := range example.Output {
-				for j := range v {
+				for j, vv := range v {
 					kk, max := 0, 0.0
 					for k := 0; k < 10; k++ {
 						value := input.X[e*size+isize+(i*len(v)+j)*10+k]
@@ -268,12 +270,17 @@ func main() {
 							kk, max = k, value
 						}
 					}
+					if byte(kk) == vv {
+						correct++
+					}
+					total++
 					fmt.Printf("%.1d ", kk)
 				}
 				fmt.Println()
 			}
 			fmt.Println()
 			e++
+			fmt.Println(correct, float64(correct)/float64(total))
 		}
 	}
 	prnt()
@@ -292,8 +299,8 @@ func main() {
 	attention := tf64.T(tf64.Mul(softmax(tf64.Mul(q, k)), tf64.T(v)))
 	output := tf64.Entropy(softmax(attention))
 	//loss := tf64.Sum(output)
-	begin := 5
-	end := 6
+	begin := length - 1
+	end := length
 	loss := tf64.Sum(tf64.Slice(output, map[string]interface{}{"begin": &begin, "end": &end}))
 	points := make(plotter.XYs, 0, 8)
 	for epoch := 0; epoch < 1024; epoch++ {

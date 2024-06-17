@@ -6,6 +6,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"math"
 	"math/rand"
@@ -99,9 +100,8 @@ type Set struct {
 	Train []Example `json:"train"`
 }
 
-func main() {
-	rng := rand.New(rand.NewSource(1))
-
+// Load loads the data
+func Load() []Set {
 	dirs, err := os.ReadDir("ARC-AGI/data/training/")
 	if err != nil {
 		panic(err)
@@ -125,6 +125,13 @@ func main() {
 	}
 	fmt.Println("test", test)
 	fmt.Println("train", train)
+	return sets
+}
+
+// NeuralNetwork is the neural network model
+func NeuralNetwork() {
+	rng := rand.New(rand.NewSource(1))
+	sets := Load()
 	s := 0
 
 	ix, iy := 0, 0
@@ -414,4 +421,28 @@ func main() {
 	}
 	fmt.Println("v", min, max)
 	prnt()
+}
+
+// KolmogorovComplexity is the kolmogorov complexity model
+func KolmogorovComplexity() {
+
+}
+
+var (
+	// FlagNeuralNetwork is a neural network model
+	FlagNeuralNetwork = flag.Bool("nn", false, "neural network mode")
+	// FlagKolmogorovComplexity is the kolmogorov complexity based model
+	FlagKolmogorovComplexity = flag.Bool("k", false, "kolmogorov complexity model")
+)
+
+func main() {
+	flag.Parse()
+
+	if *FlagNeuralNetwork {
+		NeuralNetwork()
+		return
+	} else if *FlagKolmogorovComplexity {
+		KolmogorovComplexity()
+		return
+	}
 }

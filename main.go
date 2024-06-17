@@ -425,7 +425,13 @@ func NeuralNetwork() {
 
 // KolmogorovComplexity is the kolmogorov complexity model
 func KolmogorovComplexity() {
-
+	examples := Load()
+	buffer := []byte{}
+	for _, line := range examples[0].Train[0].Output {
+		buffer = append(buffer, line...)
+	}
+	pressed := BijectiveBurrowsWheelerCoder(buffer)
+	fmt.Println(pressed)
 }
 
 var (

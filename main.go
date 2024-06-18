@@ -560,15 +560,56 @@ func KolmogorovComplexity() {
 	}
 
 	optimizer := matrix.NewOptimizer(&rng, 8, .1, 4, func(samples []matrix.Sample, x ...matrix.Matrix) {
-		for _, sample := range samples {
+		for ss, sample := range samples {
 			x1 := sample.Vars[0][0].Sample()
 			y1 := sample.Vars[0][1].Sample()
 			z1 := sample.Vars[0][2].Sample()
 			w1 := x1.Add(y1.H(z1))
 
-			_ = w1
+			a := []byte{}
+			for _, v := range sets[s].Train {
+				for _, vv := range v.Input {
+					a = append(a, vv...)
+				}
+				for _, vv := range v.Output {
+					a = append(a, vv...)
+				}
+			}
+			for _, v := range sets[s].Test[:1] {
+				for _, vv := range v.Input {
+					a = append(a, vv...)
+				}
+			}
+
+			for y := 0; y < oy; y++ {
+				for x := 0; x < ox*10; x += 10 {
+					sum := float32(0.0)
+					for z := 0; z < 10; z++ {
+						value := w1.Data[y*10*ox+x+z]
+						if value < 0 {
+							value = -value
+						}
+						sum += value
+					}
+					max, index := float32(0.0), 0
+					for z := 0; z < 10; z++ {
+						value := w1.Data[y*10*ox+x+z]
+						if value < 0 {
+							value = -value
+						}
+						value /= sum
+						if value > max {
+							max, index = value, z
+						}
+					}
+					a = append(a, byte(index))
+				}
+			}
+			a = BijectiveBurrowsWheelerCoder(a)
+			output = MoveToFrontRunLengthCoder(a)
+			samples[ss].Cost = Entropy(output) * float64(len(output))
 		}
-	}, matrix.NewCoord(ox, oy))
+	}, matrix.NewCoord(ox*10, oy))
 	var sample matrix.Sample
 	for i := 0; i < 33; i++ {
 		sample = optimizer.Iterate()

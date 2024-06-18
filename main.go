@@ -423,6 +423,47 @@ func NeuralNetwork() {
 	prnt()
 }
 
+func MoveToFrontCoder(block []byte) []byte {
+	nodes := [256]byte{}
+	var first byte
+
+	for node, _ := range nodes {
+		nodes[node] = uint8(node) + 1
+	}
+
+	current, index := make([]byte, len(block)), 0
+	for _, v := range block {
+		var node, next byte
+		var symbol byte
+		for next = first; next != v; node, next = next, nodes[next] {
+			symbol++
+		}
+
+		current[index], index = symbol, index+1
+		if symbol != 0 {
+			first, nodes[node], nodes[next] = next, nodes[next], first
+		}
+	}
+	return current
+}
+
+func Entropy(buffer []byte) float64 {
+	histogram := [256]float64{}
+	sum := 0.0
+	for _, v := range buffer {
+		histogram[v]++
+		sum++
+	}
+	entropy := 0.0
+	for _, v := range histogram {
+		if v == 0 {
+			continue
+		}
+		entropy += (v / sum) * (math.Log2(v) - math.Log2(sum))
+	}
+	return -entropy
+}
+
 // KolmogorovComplexity is the kolmogorov complexity model
 func KolmogorovComplexity() {
 	examples := Load()
@@ -430,8 +471,13 @@ func KolmogorovComplexity() {
 	for _, line := range examples[0].Train[0].Output {
 		buffer = append(buffer, line...)
 	}
+	cp := make([]byte, len(buffer))
+	copy(cp, buffer)
 	pressed := BijectiveBurrowsWheelerCoder(buffer)
-	fmt.Println(pressed)
+	fmt.Println(Entropy(cp), cp)
+	fmt.Println(Entropy(pressed), pressed)
+	output := MoveToFrontCoder(pressed)
+	fmt.Println(Entropy(output), output)
 }
 
 var (

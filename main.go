@@ -615,6 +615,42 @@ func KolmogorovComplexity() {
 		sample = optimizer.Iterate()
 		fmt.Println(i, sample.Cost)
 	}
+
+	x1 := sample.Vars[0][0].Sample()
+	y1 := sample.Vars[0][1].Sample()
+	z1 := sample.Vars[0][2].Sample()
+	w1 := x1.Add(y1.H(z1))
+	correct, total := 0.0, 0.0
+	for y := 0; y < oy; y++ {
+		for x := 0; x < ox*10; x += 10 {
+			sum := float32(0.0)
+			for z := 0; z < 10; z++ {
+				value := w1.Data[y*10*ox+x+z]
+				if value < 0 {
+					value = -value
+				}
+				sum += value
+			}
+			max, index := float32(0.0), 0
+			for z := 0; z < 10; z++ {
+				value := w1.Data[y*10*ox+x+z]
+				if value < 0 {
+					value = -value
+				}
+				value /= sum
+				if value > max {
+					max, index = value, z
+				}
+			}
+			fmt.Printf("%.1d ", index)
+			total++
+			if byte(index) == sets[s].Test[0].Output[y][x/10] {
+				correct++
+			}
+		}
+		fmt.Println()
+	}
+	fmt.Println(correct, correct/total)
 }
 
 var (

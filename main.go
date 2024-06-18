@@ -19,6 +19,7 @@ import (
 	"gonum.org/v1/plot/vg/draw"
 
 	"github.com/pointlander/gradient/tf64"
+	"github.com/pointlander/matrix"
 )
 
 const (
@@ -511,9 +512,12 @@ func Entropy(buffer []byte) float64 {
 
 // KolmogorovComplexity is the kolmogorov complexity model
 func KolmogorovComplexity() {
-	examples := Load()
+	rng := matrix.Rand(1)
+	sets := Load()
+	s := 0
+
 	buffer := []byte{}
-	for _, line := range examples[0].Train[0].Output {
+	for _, line := range sets[s].Train[0].Output {
 		buffer = append(buffer, line...)
 	}
 	cp := make([]byte, len(buffer))
@@ -525,8 +529,8 @@ func KolmogorovComplexity() {
 	fmt.Println(Entropy(output)*float64(len(output)), output)
 
 	buffer = []byte{}
-	for i := range examples[0].Train[0].Output[0] {
-		for _, line := range examples[0].Train[0].Output {
+	for i := range sets[s].Train[0].Output[0] {
+		for _, line := range sets[s].Train[0].Output {
 			buffer = append(buffer, line[i])
 		}
 	}
@@ -537,6 +541,39 @@ func KolmogorovComplexity() {
 	fmt.Println(Entropy(pressed)*float64(len(pressed)), pressed)
 	output = MoveToFrontRunLengthCoder(pressed)
 	fmt.Println(Entropy(output)*float64(len(output)), output)
+
+	ix, iy := 0, 0
+	ox, oy := 0, 0
+	for _, value := range sets[s].Train {
+		if len(value.Input) > iy {
+			iy = len(value.Input)
+		}
+		if len(value.Input[0]) > ix {
+			ix = len(value.Input[0])
+		}
+		if len(value.Output) > oy {
+			oy = len(value.Output)
+		}
+		if len(value.Output[0]) > ox {
+			ox = len(value.Output[0])
+		}
+	}
+
+	optimizer := matrix.NewOptimizer(&rng, 8, .1, 4, func(samples []matrix.Sample, x ...matrix.Matrix) {
+		for _, sample := range samples {
+			x1 := sample.Vars[0][0].Sample()
+			y1 := sample.Vars[0][1].Sample()
+			z1 := sample.Vars[0][2].Sample()
+			w1 := x1.Add(y1.H(z1))
+
+			_ = w1
+		}
+	}, matrix.NewCoord(ox, oy))
+	var sample matrix.Sample
+	for i := 0; i < 33; i++ {
+		sample = optimizer.Iterate()
+		fmt.Println(i, sample.Cost)
+	}
 }
 
 var (

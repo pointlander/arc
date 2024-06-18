@@ -447,6 +447,51 @@ func MoveToFrontCoder(block []byte) []byte {
 	return current
 }
 
+func MoveToFrontRunLengthCoder(block []byte) []byte {
+
+	current, index, length := make([]byte, len(block)), 0, uint64(0)
+	outputSymbol := func(symbol byte) {
+		current[index], index = symbol, index+1
+	}
+	outputLength := func() {
+		if length > 0 {
+			length--
+			outputSymbol(uint8(length & 1))
+			for length > 1 {
+				length = (length - 2) >> 1
+				outputSymbol(uint8(length & 1))
+			}
+			length = 0
+		}
+	}
+
+	var nodes [256]byte
+	var first byte
+	for node, _ := range nodes {
+		nodes[node] = byte(node) + 1
+	}
+
+	for _, v := range block {
+		var node, next byte
+		var symbol byte
+		for next = first; next != v; node, next = next, nodes[next] {
+			symbol++
+		}
+
+		if symbol == 0 {
+			length++
+			continue
+		}
+
+		first, nodes[node], nodes[next] = next, nodes[next], first
+
+		outputLength()
+		outputSymbol(symbol + 1)
+	}
+
+	return current[:index]
+}
+
 func Entropy(buffer []byte) float64 {
 	histogram := [256]float64{}
 	sum := 0.0
@@ -474,10 +519,24 @@ func KolmogorovComplexity() {
 	cp := make([]byte, len(buffer))
 	copy(cp, buffer)
 	pressed := BijectiveBurrowsWheelerCoder(buffer)
-	fmt.Println(Entropy(cp), cp)
-	fmt.Println(Entropy(pressed), pressed)
-	output := MoveToFrontCoder(pressed)
-	fmt.Println(Entropy(output), output)
+	fmt.Println(Entropy(cp)*float64(len(cp)), cp)
+	fmt.Println(Entropy(pressed)*float64(len(pressed)), pressed)
+	output := MoveToFrontRunLengthCoder(pressed)
+	fmt.Println(Entropy(output)*float64(len(output)), output)
+
+	buffer = []byte{}
+	for i := range examples[0].Train[0].Output[0] {
+		for _, line := range examples[0].Train[0].Output {
+			buffer = append(buffer, line[i])
+		}
+	}
+	cp = make([]byte, len(buffer))
+	copy(cp, buffer)
+	pressed = BijectiveBurrowsWheelerCoder(buffer)
+	fmt.Println(Entropy(cp)*float64(len(cp)), cp)
+	fmt.Println(Entropy(pressed)*float64(len(pressed)), pressed)
+	output = MoveToFrontRunLengthCoder(pressed)
+	fmt.Println(Entropy(output)*float64(len(output)), output)
 }
 
 var (

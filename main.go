@@ -694,7 +694,7 @@ func LLM() {
 				for _, s := range vv {
 					fmt.Fprintf(output, "%.1d", s)
 				}
-				if j < len(v.Input)-1 {
+				if j < len(v.Output)-1 {
 					fmt.Fprintf(output, "|")
 				}
 			}

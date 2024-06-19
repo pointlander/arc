@@ -5,18 +5,23 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
 	"os"
 	"strings"
 
+	"github.com/google/generative-ai-go/genai"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
 	"gonum.org/v1/plot/vg/draw"
+	"google.golang.org/api/option"
 
 	"github.com/pointlander/gradient/tf64"
 	"github.com/pointlander/matrix"
@@ -655,11 +660,18 @@ func KolmogorovComplexity() {
 
 // LLM mode generates a programing specification for input into an llm
 func LLM() {
-	output, err := os.Create("llm.txt")
+	key := os.Getenv("KEY")
+	fmt.Println(key)
+
+	ctx := context.Background()
+	// Access your API key as an environment variable (see "Set up your API key" above)
+	client, err := genai.NewClient(ctx, option.WithAPIKey(key))
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	defer output.Close()
+	defer client.Close()
+
+	output := &bytes.Buffer{}
 	fmt.Fprintf(output, "You are a programmer tasked with creating a python program that can handle different inputs and produce corresponding outputs. Here are some examples:\n")
 	sets := Load()
 	i := 0
@@ -685,6 +697,25 @@ func LLM() {
 		}
 	}
 	fmt.Fprintf(output, "The program should be written in a clear and efficient manner.\n")
+
+	out, err := os.Create("llm.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer out.Close()
+	out.Write(output.Bytes())
+
+	// The Gemini 1.5 models are versatile and work with both text-only and multimodal prompts
+	model := client.GenerativeModel("gemini-1.5-flash")
+	resp, err := model.GenerateContent(ctx, genai.Text(output.String()))
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, candidate := range resp.Candidates {
+		for _, part := range candidate.Content.Parts {
+			fmt.Println(part)
+		}
+	}
 }
 
 var (

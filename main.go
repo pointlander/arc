@@ -679,17 +679,23 @@ func LLM() {
 		for _, v := range set.Train {
 			fmt.Fprintln(output)
 			fmt.Fprintf(output, "**Input %d:** ", i+1)
-			for _, vv := range v.Input {
+			for j, vv := range v.Input {
 				for _, s := range vv {
 					fmt.Fprintf(output, "%.1d", s)
+				}
+				if j < len(v.Input)-1 {
+					fmt.Fprintf(output, "|")
 				}
 			}
 			fmt.Fprintln(output)
 
 			fmt.Fprintf(output, "**Output %d:** ", i+1)
-			for _, vv := range v.Output {
+			for j, vv := range v.Output {
 				for _, s := range vv {
 					fmt.Fprintf(output, "%.1d", s)
+				}
+				if j < len(v.Input)-1 {
+					fmt.Fprintf(output, "|")
 				}
 			}
 			fmt.Fprintln(output)
@@ -711,9 +717,14 @@ func LLM() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, candidate := range resp.Candidates {
+	for i, candidate := range resp.Candidates {
+		out, err := os.Create(fmt.Sprintf("candidate%d.py", i))
 		for _, part := range candidate.Content.Parts {
-			fmt.Println(part)
+			fmt.Fprintf(out, "%s", part)
+		}
+		err = out.Close()
+		if err != nil {
+			panic(err)
 		}
 	}
 }

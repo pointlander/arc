@@ -653,11 +653,47 @@ func KolmogorovComplexity() {
 	fmt.Println(correct, correct/total)
 }
 
+// LLM mode generates a programing specification for input into an llm
+func LLM() {
+	output, err := os.Create("llm.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer output.Close()
+	fmt.Fprintf(output, "You are a programmer tasked with creating a python program that can handle different inputs and produce corresponding outputs. Here are some examples:\n")
+	sets := Load()
+	i := 0
+	for _, set := range sets {
+		for _, v := range set.Train {
+			fmt.Fprintln(output)
+			fmt.Fprintf(output, "**Input %d:** ", i+1)
+			for _, vv := range v.Input {
+				for _, s := range vv {
+					fmt.Fprintf(output, "%.1d", s)
+				}
+			}
+			fmt.Fprintln(output)
+
+			fmt.Fprintf(output, "**Output %d:** ", i+1)
+			for _, vv := range v.Output {
+				for _, s := range vv {
+					fmt.Fprintf(output, "%.1d", s)
+				}
+			}
+			fmt.Fprintln(output)
+			i++
+		}
+	}
+	fmt.Fprintf(output, "The program should be written in a clear and efficient manner.\n")
+}
+
 var (
 	// FlagNeuralNetwork is a neural network model
 	FlagNeuralNetwork = flag.Bool("nn", false, "neural network mode")
 	// FlagKolmogorovComplexity is the kolmogorov complexity based model
 	FlagKolmogorovComplexity = flag.Bool("k", false, "kolmogorov complexity model")
+	// FlagLLM llm mode
+	FlagLLM = flag.Bool("llm", false, "llm mode")
 )
 
 func main() {
@@ -668,6 +704,9 @@ func main() {
 		return
 	} else if *FlagKolmogorovComplexity {
 		KolmogorovComplexity()
+		return
+	} else if *FlagLLM {
+		LLM()
 		return
 	}
 }

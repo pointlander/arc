@@ -677,8 +677,10 @@ func LLM() {
 	i := 0
 	for _, set := range sets {
 		for _, v := range set.Train {
+			iy := len(v.Input)
+			ix := len(v.Input[0])
 			fmt.Fprintln(output)
-			fmt.Fprintf(output, "**Input %d:** ", i+1)
+			fmt.Fprintf(output, "**Input %d:** %dw %dh ", i+1, ix, iy)
 			for j, vv := range v.Input {
 				for _, s := range vv {
 					fmt.Fprintf(output, "%.1d", s)
@@ -689,7 +691,9 @@ func LLM() {
 			}
 			fmt.Fprintln(output)
 
-			fmt.Fprintf(output, "**Output %d:** ", i+1)
+			oy := len(v.Output)
+			ox := len(v.Output[0])
+			fmt.Fprintf(output, "**Output %d:** %dw %dh ", i+1, ox, oy)
 			for j, vv := range v.Output {
 				for _, s := range vv {
 					fmt.Fprintf(output, "%.1d", s)

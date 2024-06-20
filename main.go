@@ -675,7 +675,7 @@ func LLM() {
 	fmt.Fprintf(output, "You are a programmer tasked with creating a python program that can handle different inputs and produce corresponding outputs. Here are some examples:\n")
 	sets := Load()
 	i := 0
-	for _, set := range sets {
+	for s, set := range sets {
 		for _, v := range set.Train {
 			iy := len(v.Input)
 			ix := len(v.Input[0])
@@ -693,7 +693,7 @@ func LLM() {
 
 			oy := len(v.Output)
 			ox := len(v.Output[0])
-			fmt.Fprintf(output, "**Output %d:** %dw %dh ", i+1, ox, oy)
+			fmt.Fprintf(output, "**Output %d:** type=%d %dw %dh ", i+1, s, ox, oy)
 			for j, vv := range v.Output {
 				for _, s := range vv {
 					fmt.Fprintf(output, "%.1d", s)

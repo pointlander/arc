@@ -658,6 +658,25 @@ func KolmogorovComplexity() {
 	fmt.Println(correct, correct/total)
 }
 
+// K computes the K complexity
+func K(example Example) (a, b int) {
+	buffer := []byte{}
+	for _, line := range example.Input {
+		buffer = append(buffer, line...)
+	}
+	a = len(MoveToFrontRunLengthCoder(BijectiveBurrowsWheelerCoder(buffer)))
+
+	buffer = []byte{}
+	for i := range example.Input[0] {
+		for _, line := range example.Input {
+			buffer = append(buffer, line[i])
+		}
+	}
+	b = len(MoveToFrontRunLengthCoder(BijectiveBurrowsWheelerCoder(buffer)))
+
+	return a, b
+}
+
 // LLM mode generates a programing specification for input into an llm
 func LLM() {
 	key := os.Getenv("KEY")
@@ -681,7 +700,10 @@ func LLM() {
 			//ix := len(v.Input[0])
 			fmt.Fprintln(output)
 			//fmt.Fprintf(output, "**Input %d:** %dw %dh ", i+1, ix, iy)
-			fmt.Fprintf(output, "**Input %d:** ", i+1)
+			a, b := K(v)
+			fa := float64(a) / float64(len(v.Input)*len(v.Input[0]))
+			fb := float64(b) / float64(len(v.Input)*len(v.Input[0]))
+			fmt.Fprintf(output, "**Input %d:** compression_factor_a=%f compression_factor_b=%f ", i+1, fa, fb)
 			for j, vv := range v.Input {
 				for _, s := range vv {
 					fmt.Fprintf(output, "%.1d", s)
@@ -715,6 +737,8 @@ func LLM() {
 	}
 	defer out.Close()
 	out.Write(output.Bytes())
+
+	fmt.Println("generated prompt")
 
 	// The Gemini 1.5 models are versatile and work with both text-only and multimodal prompts
 	model := client.GenerativeModel("gemini-1.5-flash")

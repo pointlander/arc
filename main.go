@@ -703,33 +703,47 @@ func LLM() {
 			//a, b := K(v)
 			//fa := float64(a) / float64(len(v.Input)*len(v.Input[0]))
 			//fb := float64(b) / float64(len(v.Input)*len(v.Input[0]))
-			fmt.Fprintf(output, "**Input %d:**  type=%d width=%d height=%d ", i+1, s, ix, iy)
+			fmt.Fprintf(output, "**Input %d:**  type=%d width=%d height=%d grid=", i+1, s, ix, iy)
+			fmt.Fprintf(output, "[")
 			for j, vv := range v.Input {
-				for _, s := range vv {
+				fmt.Fprintf(output, "[")
+				for k, s := range vv {
 					fmt.Fprintf(output, "%.1d", s)
+					if k < len(vv)-1 {
+						fmt.Fprintf(output, ",")
+					}
 				}
+				fmt.Fprintf(output, "]")
 				if j < len(v.Input)-1 {
-					fmt.Fprintf(output, "|")
+					fmt.Fprintf(output, ",")
 				}
 			}
+			fmt.Fprintf(output, "]")
 			fmt.Fprintln(output)
 
 			oy := len(v.Output)
 			ox := len(v.Output[0])
-			fmt.Fprintf(output, "**Output %d:** type=%d width=%d height=%d ", i+1, s, ox, oy)
+			fmt.Fprintf(output, "**Output %d:** type=%d width=%d height=%d grid=", i+1, s, ox, oy)
+			fmt.Fprintf(output, "[")
 			for j, vv := range v.Output {
-				for _, s := range vv {
+				fmt.Fprintf(output, "[")
+				for k, s := range vv {
 					fmt.Fprintf(output, "%.1d", s)
+					if k < len(vv)-1 {
+						fmt.Fprintf(output, ",")
+					}
 				}
+				fmt.Fprintf(output, "]")
 				if j < len(v.Output)-1 {
-					fmt.Fprintf(output, "|")
+					fmt.Fprintf(output, ",")
 				}
 			}
+			fmt.Fprintf(output, "]")
 			fmt.Fprintln(output)
 			i++
 		}
 	}
-	fmt.Fprintf(output, "The program should be written in a clear and efficient manner as a single function.\n")
+	fmt.Fprintf(output, "The program should be written in a clear and efficient manner as a single function for types==[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].\n")
 
 	out, err := os.Create("llm.txt")
 	if err != nil {

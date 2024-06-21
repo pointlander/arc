@@ -696,14 +696,14 @@ func LLM() {
 	i := 0
 	for s, set := range sets {
 		for _, v := range set.Train {
-			//iy := len(v.Input)
-			//ix := len(v.Input[0])
+			iy := len(v.Input)
+			ix := len(v.Input[0])
 			fmt.Fprintln(output)
 			//fmt.Fprintf(output, "**Input %d:** %dw %dh ", i+1, ix, iy)
-			a, b := K(v)
-			fa := float64(a) / float64(len(v.Input)*len(v.Input[0]))
-			fb := float64(b) / float64(len(v.Input)*len(v.Input[0]))
-			fmt.Fprintf(output, "**Input %d:** compression_factor_a=%f compression_factor_b=%f ", i+1, fa, fb)
+			//a, b := K(v)
+			//fa := float64(a) / float64(len(v.Input)*len(v.Input[0]))
+			//fb := float64(b) / float64(len(v.Input)*len(v.Input[0]))
+			fmt.Fprintf(output, "**Input %d:**  type=%d width=%d height=%d ", i+1, s, ix, iy)
 			for j, vv := range v.Input {
 				for _, s := range vv {
 					fmt.Fprintf(output, "%.1d", s)
@@ -716,7 +716,7 @@ func LLM() {
 
 			oy := len(v.Output)
 			ox := len(v.Output[0])
-			fmt.Fprintf(output, "**Output %d:** type=%d %dw %dh ", i+1, s, ox, oy)
+			fmt.Fprintf(output, "**Output %d:** type=%d width=%d height=%d ", i+1, s, ox, oy)
 			for j, vv := range v.Output {
 				for _, s := range vv {
 					fmt.Fprintf(output, "%.1d", s)
@@ -729,7 +729,7 @@ func LLM() {
 			i++
 		}
 	}
-	fmt.Fprintf(output, "The program should be written in a clear and efficient manner.\n")
+	fmt.Fprintf(output, "The program should be written in a clear and efficient manner as a single function.\n")
 
 	out, err := os.Create("llm.txt")
 	if err != nil {

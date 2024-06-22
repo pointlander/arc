@@ -691,11 +691,11 @@ func LLM() {
 	defer client.Close()
 
 	output := &bytes.Buffer{}
-	fmt.Fprintf(output, "You are a programmer tasked with creating a python program that can handle different inputs and produce corresponding outputs. Here are some examples:\n")
+	fmt.Fprintf(output, "You are a programmer tasked with creating a python program that can handle different inputs and produce corresponding outputs and not produce non outputs. Here are some examples:\n")
 	sets := Load()
 	i := 0
 	for s, set := range sets {
-		for _, v := range set.Train {
+		for r, v := range set.Train {
 			iy := len(v.Input)
 			ix := len(v.Input[0])
 			fmt.Fprintln(output)
@@ -740,6 +740,10 @@ func LLM() {
 			}
 			fmt.Fprintf(output, "]")
 			fmt.Fprintln(output)
+			if s == 0 && r == 0 {
+				fmt.Fprintf(output, "**Non Output %d:** type=%d width=9 height=9 grid=[[0,0,0,0,7,0,0,7,0],[0,0,0,7,7,7,7,7,7],[0,0,0,0,7,0,0,7,0],[0,7,0,0,7,0,0,7,0],[7,7,7,7,7,7,7,7,7],[0,7,0,0,7,0,0,7,0],[0,0,0,0,7,0,0,7,0],[0,0,0,7,7,7,7,7,7],[0,0,0,0,7,0,0,7,0]]\n", i+1, s)
+				fmt.Fprintf(output, "**Non Output %d:** type=%d width=9 height=9 grid=[[0,7,7,7,7,0,7],[0,7,7,7,7,0,7],[0,7,7,7,7,0,7],[7,7,7,7,7,0,7],[7,7,7,7,7,0,7],[7,7,7,7,7,0,7],[0,7,7,7,7,0,7],[0,7,7,7,7,0,7],[0,7,7,7,7,0,7]]\n", i+1, s)
+			}
 			i++
 		}
 	}

@@ -694,51 +694,37 @@ func LLM() {
 	fmt.Fprintf(output, "You are a programmer tasked with creating a python program that can handle different inputs and produce corresponding outputs and not produce non outputs. Here are some examples:\n")
 	sets := Load()
 	i := 0
-	for s, set := range sets {
+	for s, set := range sets[:10] {
 		for _, v := range set.Train {
-			iy := len(v.Input)
-			ix := len(v.Input[0])
+			//iy := len(v.Input)
+			//ix := len(v.Input[0])
 			fmt.Fprintln(output)
 			//fmt.Fprintf(output, "**Input %d:** %dw %dh ", i+1, ix, iy)
 			//a, b := K(v)
 			//fa := float64(a) / float64(len(v.Input)*len(v.Input[0]))
 			//fb := float64(b) / float64(len(v.Input)*len(v.Input[0]))
-			fmt.Fprintf(output, "**Input %d:**  type=%d width=%d height=%d grid=", i+1, s, ix, iy)
-			fmt.Fprintf(output, "{")
+			fmt.Fprintf(output, "**Input %d:**  type=%d grid=", i+1, s)
 			for j, vv := range v.Input {
-				fmt.Fprintf(output, "%d:{", j)
-				for k, s := range vv {
-					fmt.Fprintf(output, "%d:%.1d", k, s)
-					if k < len(vv)-1 {
-						fmt.Fprintf(output, ",")
-					}
+				for _, s := range vv {
+					fmt.Fprintf(output, "%.1d", s)
 				}
-				fmt.Fprintf(output, "}")
 				if j < len(v.Input)-1 {
-					fmt.Fprintf(output, ",")
+					fmt.Fprintf(output, "|")
 				}
 			}
-			fmt.Fprintf(output, "}")
 			fmt.Fprintln(output)
 
-			oy := len(v.Output)
-			ox := len(v.Output[0])
-			fmt.Fprintf(output, "**Output %d:** type=%d width=%d height=%d grid=", i+1, s, ox, oy)
-			fmt.Fprintf(output, "{")
+			//oy := len(v.Output)
+			//ox := len(v.Output[0])
+			fmt.Fprintf(output, "**Output %d:** type=%d grid=", i+1, s)
 			for j, vv := range v.Output {
-				fmt.Fprintf(output, "%d:{", j)
-				for k, s := range vv {
-					fmt.Fprintf(output, "%d:%.1d", k, s)
-					if k < len(vv)-1 {
-						fmt.Fprintf(output, ",")
-					}
+				for _, s := range vv {
+					fmt.Fprintf(output, "%.1d", s)
 				}
-				fmt.Fprintf(output, "}")
 				if j < len(v.Output)-1 {
-					fmt.Fprintf(output, ",")
+					fmt.Fprintf(output, "|")
 				}
 			}
-			fmt.Fprintf(output, "}")
 			fmt.Fprintln(output)
 			/*if s == 0 && r == 0 {
 				fmt.Fprintf(output, "**Non Output %d:** type=%d width=9 height=9 grid=[[0,0,0,0,7,0,0,7,0],[0,0,0,7,7,7,7,7,7],[0,0,0,0,7,0,0,7,0],[0,7,0,0,7,0,0,7,0],[7,7,7,7,7,7,7,7,7],[0,7,0,0,7,0,0,7,0],[0,0,0,0,7,0,0,7,0],[0,0,0,7,7,7,7,7,7],[0,0,0,0,7,0,0,7,0]]\n", i+1, s)
@@ -759,7 +745,7 @@ func LLM() {
 	fmt.Println("generated prompt")
 
 	// The Gemini 1.5 models are versatile and work with both text-only and multimodal prompts
-	model := client.GenerativeModel("gemini-1.5-flash")
+	model := client.GenerativeModel("gemini-1.5-pro")
 	resp, err := model.GenerateContent(ctx, genai.Text(output.String()))
 	if err != nil {
 		log.Fatal(err)

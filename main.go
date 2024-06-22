@@ -695,7 +695,7 @@ func LLM() {
 	sets := Load()
 	i := 0
 	for s, set := range sets {
-		for r, v := range set.Train {
+		for _, v := range set.Train {
 			iy := len(v.Input)
 			ix := len(v.Input[0])
 			fmt.Fprintln(output)
@@ -704,46 +704,46 @@ func LLM() {
 			//fa := float64(a) / float64(len(v.Input)*len(v.Input[0]))
 			//fb := float64(b) / float64(len(v.Input)*len(v.Input[0]))
 			fmt.Fprintf(output, "**Input %d:**  type=%d width=%d height=%d grid=", i+1, s, ix, iy)
-			fmt.Fprintf(output, "[")
+			fmt.Fprintf(output, "{")
 			for j, vv := range v.Input {
-				fmt.Fprintf(output, "[")
+				fmt.Fprintf(output, "%d:{", j)
 				for k, s := range vv {
-					fmt.Fprintf(output, "%.1d", s)
+					fmt.Fprintf(output, "%d:%.1d", k, s)
 					if k < len(vv)-1 {
 						fmt.Fprintf(output, ",")
 					}
 				}
-				fmt.Fprintf(output, "]")
+				fmt.Fprintf(output, "}")
 				if j < len(v.Input)-1 {
 					fmt.Fprintf(output, ",")
 				}
 			}
-			fmt.Fprintf(output, "]")
+			fmt.Fprintf(output, "}")
 			fmt.Fprintln(output)
 
 			oy := len(v.Output)
 			ox := len(v.Output[0])
 			fmt.Fprintf(output, "**Output %d:** type=%d width=%d height=%d grid=", i+1, s, ox, oy)
-			fmt.Fprintf(output, "[")
+			fmt.Fprintf(output, "{")
 			for j, vv := range v.Output {
-				fmt.Fprintf(output, "[")
+				fmt.Fprintf(output, "%d:{", j)
 				for k, s := range vv {
-					fmt.Fprintf(output, "%.1d", s)
+					fmt.Fprintf(output, "%d:%.1d", k, s)
 					if k < len(vv)-1 {
 						fmt.Fprintf(output, ",")
 					}
 				}
-				fmt.Fprintf(output, "]")
+				fmt.Fprintf(output, "}")
 				if j < len(v.Output)-1 {
 					fmt.Fprintf(output, ",")
 				}
 			}
-			fmt.Fprintf(output, "]")
+			fmt.Fprintf(output, "}")
 			fmt.Fprintln(output)
-			if s == 0 && r == 0 {
+			/*if s == 0 && r == 0 {
 				fmt.Fprintf(output, "**Non Output %d:** type=%d width=9 height=9 grid=[[0,0,0,0,7,0,0,7,0],[0,0,0,7,7,7,7,7,7],[0,0,0,0,7,0,0,7,0],[0,7,0,0,7,0,0,7,0],[7,7,7,7,7,7,7,7,7],[0,7,0,0,7,0,0,7,0],[0,0,0,0,7,0,0,7,0],[0,0,0,7,7,7,7,7,7],[0,0,0,0,7,0,0,7,0]]\n", i+1, s)
 				fmt.Fprintf(output, "**Non Output %d:** type=%d width=9 height=9 grid=[[0,7,7,7,7,0,7],[0,7,7,7,7,0,7],[0,7,7,7,7,0,7],[7,7,7,7,7,0,7],[7,7,7,7,7,0,7],[7,7,7,7,7,0,7],[0,7,7,7,7,0,7],[0,7,7,7,7,0,7],[0,7,7,7,7,0,7]]\n", i+1, s)
-			}
+			}*/
 			i++
 		}
 	}

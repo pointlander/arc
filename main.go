@@ -691,7 +691,7 @@ func LLM() {
 	defer client.Close()
 
 	output := &bytes.Buffer{}
-	fmt.Fprintf(output, "You are a programmer tasked with creating a python program that can handle different inputs and produce corresponding outputs and not produce non outputs. Here are some examples:\n")
+	fmt.Fprintf(output, "You are a programmer tasked with creating a python program that can handle different inputs and produce corresponding outputs. Here are some examples:\n")
 	sets := Load()
 	i := 0
 	for s, set := range sets[:10] {
@@ -703,28 +703,40 @@ func LLM() {
 			//a, b := K(v)
 			//fa := float64(a) / float64(len(v.Input)*len(v.Input[0]))
 			//fb := float64(b) / float64(len(v.Input)*len(v.Input[0]))
-			fmt.Fprintf(output, "**Input %d:**  type=%d grid=", i+1, s)
+			fmt.Fprintf(output, "**Input %d Type %d:** {", i+1, s)
 			for j, vv := range v.Input {
-				for _, s := range vv {
-					fmt.Fprintf(output, "%.1d", s)
+				fmt.Fprintf(output, "%d: {", j)
+				for k, s := range vv {
+					fmt.Fprintf(output, "%d: %.1d", k, s)
+					if k < len(vv)-1 {
+						fmt.Fprintf(output, ", ")
+					}
 				}
+				fmt.Fprintf(output, "}")
 				if j < len(v.Input)-1 {
-					fmt.Fprintf(output, "|")
+					fmt.Fprintf(output, ", ")
 				}
 			}
+			fmt.Fprintf(output, "}")
 			fmt.Fprintln(output)
 
 			//oy := len(v.Output)
 			//ox := len(v.Output[0])
-			fmt.Fprintf(output, "**Output %d:** type=%d grid=", i+1, s)
+			fmt.Fprintf(output, "**Output %d:** {", i+1)
 			for j, vv := range v.Output {
-				for _, s := range vv {
-					fmt.Fprintf(output, "%.1d", s)
+				fmt.Fprintf(output, "%d: {", j)
+				for k, s := range vv {
+					fmt.Fprintf(output, "%d: %.1d", k, s)
+					if k < len(vv)-1 {
+						fmt.Fprintf(output, ", ")
+					}
 				}
+				fmt.Fprintf(output, "}")
 				if j < len(v.Output)-1 {
-					fmt.Fprintf(output, "|")
+					fmt.Fprintf(output, ", ")
 				}
 			}
+			fmt.Fprintf(output, "}")
 			fmt.Fprintln(output)
 			/*if s == 0 && r == 0 {
 				fmt.Fprintf(output, "**Non Output %d:** type=%d width=9 height=9 grid=[[0,0,0,0,7,0,0,7,0],[0,0,0,7,7,7,7,7,7],[0,0,0,0,7,0,0,7,0],[0,7,0,0,7,0,0,7,0],[7,7,7,7,7,7,7,7,7],[0,7,0,0,7,0,0,7,0],[0,0,0,0,7,0,0,7,0],[0,0,0,7,7,7,7,7,7],[0,0,0,0,7,0,0,7,0]]\n", i+1, s)
